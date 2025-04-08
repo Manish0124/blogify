@@ -20,6 +20,7 @@ export default function BlogOverview({blogList}) {
    const[openDialogBox,setOpenDialogBox] = useState(false);
    const [loading,setLoading] = useState(false);
    const[blogFormData,setBlogFormData] = useState(InitalFormdata)
+   const[currentEditedBlogId,setCurrentEditedBlogId] = useState(null);
 
    const router = useRouter()
 
@@ -36,7 +37,12 @@ export default function BlogOverview({blogList}) {
     async function handleSaveBlogData() {
      try {
       setLoading(true)
-      const apiResponse = await fetch("/api/add-blog",{
+      const apiResponse = currentEditedBlogId!==null ?
+       await fetch(`/api/update-blog?id=${currentEditedBlogId}`,{
+        method:"PUT",
+        body:JSON.stringify(blogFormData)
+       })
+      : await fetch("/api/add-blog",{
         method:"POST",
         body:JSON.stringify(blogFormData)
       })
@@ -48,6 +54,7 @@ export default function BlogOverview({blogList}) {
          setBlogFormData(InitalFormdata);
          setOpenDialogBox(false)
          setLoading(false)
+         setCurrentEditedBlogId(null)
          router.refresh()
 
       }
@@ -78,6 +85,18 @@ export default function BlogOverview({blogList}) {
         
       }
    }
+
+   function handelEdit(getCurrentBlog) {
+    // console.log("Editing blog:", getCurrentBlog);
+      setCurrentEditedBlogId(getCurrentBlog?._id)
+      setBlogFormData({
+        title:getCurrentBlog?.title,
+        description:getCurrentBlog?.description,
+      })
+      setOpenDialogBox(true)
+   }
+
+  //  console.log("Current Edited Blog ID:", currentEditedBlogId);
    
   
 
@@ -90,7 +109,7 @@ export default function BlogOverview({blogList}) {
          <h2 className=' font-bold text-2xl'>Add section here</h2>
       </div>
           
-          <AddNewBlog openDialogBox={openDialogBox} setOpenDialogBox={setOpenDialogBox} loading={loading} setLoading={loading} blogFormData={blogFormData} setBlogFormData={setBlogFormData} handleSaveBlogData={handleSaveBlogData} />
+          <AddNewBlog openDialogBox={openDialogBox} setOpenDialogBox={setOpenDialogBox} loading={loading} setLoading={loading} blogFormData={blogFormData} setBlogFormData={setBlogFormData} handleSaveBlogData={handleSaveBlogData}  currentEditedBlogId={currentEditedBlogId} setCurrentEditedBlogId={setCurrentEditedBlogId} />
      
           
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4 ' >
@@ -102,7 +121,7 @@ export default function BlogOverview({blogList}) {
                     <CardTitle className="mb-5" >{blogitem?.title}</CardTitle>
                     <CardDescription>{blogitem?.description}</CardDescription>
                     <div className='mt-4 flex items-center gap-6' >
-                      <Button>Edit</Button>
+                      <Button onClick={()=>handelEdit(blogitem)}>Edit</Button>
                       <Button onClick={()=>handleDeleteBlogById(blogitem._id)} >Delete</Button>
                     </div>
                 </Card>
